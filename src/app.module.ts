@@ -1,36 +1,31 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { SiteController } from './site/site.controller';
+import { Site } from './site/site.entity';
 import { SiteModule } from './site/site.module';
-import { SiteService } from './site/site.service';
-import { TicketController } from './ticket/ticket.controller';
+import { Ticket } from './ticket/ticket.entity';
 import { TicketModule } from './ticket/ticket.module';
-import { TicketService } from './ticket/ticket.service';
-import { TruckController } from './truck/truck.controller';
+import { Truck } from './truck/truck.entity';
 import { TruckModule } from './truck/truck.module';
-import { TruckService } from './truck/truck.service';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: '.env',
     }),
 
     // Configure TypeORM with the ConfigService to load env variables
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        host: configService.get('DB_HOST'),
-        port: parseInt(configService.get('DB_PORT'), 10),
-        username: configService.get('DB_USERNAME'),
-        password: configService.get('DB_PASSWORD'),
-        database: configService.get('DB_NAME'),
-        autoLoadEntities: true,
-        synchronize: true,
-      }),
+    TypeOrmModule.forRoot({
+      type: 'postgres',
+      host: process.env.DB_HOST,
+      port: parseInt(process.env.POSTGRES_PORT, 10),
+      username: process.env.DB_USERNAME,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_DATABASE,
+      entities: [Site, Ticket, Truck],
+      synchronize: process.env.DB_SYNCHRONIZE === 'true',
+      autoLoadEntities: true,
     }),
 
     // Other modules
@@ -38,7 +33,7 @@ import { TruckService } from './truck/truck.service';
     TruckModule,
     TicketModule,
   ],
-  providers: [SiteService, TruckService, TicketService],
-  controllers: [SiteController, TruckController, TicketController],
+  providers: [], // Site, Truck and Ticket services are already imported in their own Moduels
+  controllers: [], // Site, Truck and Ticket controllers are already imported in their own Moduels
 })
 export class AppModule {}
