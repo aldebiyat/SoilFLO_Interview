@@ -36,79 +36,115 @@ The Ticket Management API is a NestJS-powered application designed to manage tic
 
 ## Setup Instructions
 
-### Prerequisites
+### 1. Prerequisites
 
 Make sure you have the following installed:
 
-- Node.js (v14.x or later)
-- npm (v6.x or later)
-- PostgreSQL (or another database supported by TypeORM)
-
-### Installation
-
-#### Clone the repository:
+- Node.js (v16.x or later)
+- npm (v8.x or later)
 
 ```bash
-$ git clone <repository-url>
-$ cd <repository-directory>
+brew install node
+node -v
+npm -v
 ```
 
-#### Install dependencies:
+- PostgreSQL DB
 
 ```bash
-$ npm install
+Download PG Admin
 ```
 
-#### Configure the environment:
+- NestJS (v10.x or later)
+
+```bash
+npm install -g @nestjs/cli
+nest --version
+```
+
+### 2. Installation
+
+#### A. Create Postgres DB:
+
+1. Download and open pgAdmin.
+2. Connect to your PostgreSQL server.
+3. Right-click on "Databases" and select "Create > Database..."
+4. Enter a name for your database and select an owner.
+5. Click "Save" to create your database.
+
+#### B. Clone the repository:
+
+```bash
+git clone <repository-url>
+cd <repository-directory>
+```
+
+#### C. Install dependencies:
+
+```bash
+npm install
+```
+
+#### D. Configure the environment:
 
 Create a .env file at the project root with the following variables:
 
 ```bash
-$ DB_HOST=localhost
-$ DB_PORT=5432
-$ DB_USERNAME=your_db_user
-$ DB_PASSWORD=your_db_password
-$ DB_DATABASE=your_db_name
-$ DB_SYNCHRONIZE=true or false (depends on environment)
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=your_db_user
+DB_PASSWORD=your_db_password
+DB_DATABASE=your_db_name
+DB_SYNCHRONIZE=true or false (depends on environment)
 ```
 
-#### Start the application:
+#### E. Start the application:
 
 ```bash
-$ npm run start:dev
+npm run start:dev
 ```
 
-#### Run tests:
+#### F. Run tests:
 
 Run all tests.
 
 ```bash
-$ npm run test
+npm run test
+```
+
+#### G. Import Data To DB:
+
+After running the project, you need to check DB if **Site, Truck and Ticket** tables were created.
+And after checking the tables you need to start importing data from both files **SitesJSONData.json and TrucksJSONData.json** to your DB so you can be able to test the server with data.
+Files are found here.
+
+```text
+https://github.com/SoilFLO/interview-takehome-be
 ```
 
 ## Test API using _Postman_:
 
-### Base URL
+### 1. Base URL
 
 All endpoints are prefixed with
 
 ```bash
-$ http://localhost:3000
+http://localhost:3000
 ```
 
-### Postamn API Requests Path:
+### 2. Postamn API Requests Path:
 
 Where you can fins all postman requests **Create, GetByID, GetAll, Update and Delete** for **Sites, Trucks and Tickets**
 
 ```bash
-$ src/postman
+src/postman
 ```
 
 Import the both **postman_api_env.json and postman_api_requests.json** files to postman and start testing the server.
 
-### Example Endpoints
+### 3. Example Endpoints
 
-#### 1. Create Tickets in Bulk
+#### A. Create Tickets in Bulk
 
 - Method: POST
 - Endpoint: /tickets/bulk-create
@@ -131,7 +167,7 @@ Import the both **postman_api_env.json and postman_api_requests.json** files to 
 }
 ```
 
-#### 2. Filter Tickets
+#### B. Filter Tickets
 
 - Method: GET
 - Endpoint: /tickets/filter
