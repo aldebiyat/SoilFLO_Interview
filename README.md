@@ -24,62 +24,122 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+The Ticket Management API is a NestJS-powered application designed to manage tickets for trucks and construction sites. It supports bulk ticket creation, ticket filtering by site and date range, and ensures compliance with business rules such as preventing future dispatch times and avoiding duplicate dispatched times for the same truck.
 
-## Project setup
+## Features
+
+- Bulk Ticket Creation: Easily create multiple tickets for different trucks and sites in a single request.
+- Ticket Filtering: Retrieve tickets based on site and a specific date range.
+- Business Rules:
+  - Prevent tickets from being dispatched in the future.
+  - Ensure no two tickets for the same truck share the same dispatched time.
+
+## Setup Instructions
+
+### Prerequisites
+
+Make sure you have the following installed:
+
+- Node.js (v14.x or later)
+- npm (v6.x or later)
+- PostgreSQL (or another database supported by TypeORM)
+
+### Installation
+
+#### Clone the repository:
+
+```bash
+$ git clone <repository-url>
+$ cd <repository-directory>
+```
+
+#### Install dependencies:
 
 ```bash
 $ npm install
 ```
 
-## Compile and run the project
+#### Configure the environment:
+
+Create a .env file at the project root with the following variables:
 
 ```bash
-# development
-$ npm run start
+$ DB_HOST=localhost
+$ DB_PORT=5432
+$ DB_USERNAME=your_db_user
+$ DB_PASSWORD=your_db_password
+$ DB_DATABASE=your_db_name
+$ DB_SYNCHRONIZE=true or false (depends on environment)
+```
 
-# watch mode
+#### Start the application:
+
+```bash
 $ npm run start:dev
-
-# production mode
-$ npm run start:prod
 ```
 
-## Run tests
+#### Run tests:
+
+Run all tests.
 
 ```bash
-# unit tests
 $ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
 ```
 
-## Resources
+## Test API using _Postman_:
 
-Check out a few resources that may come in handy when working with NestJS:
+### Base URL
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+All endpoints are prefixed with
 
-## Support
+```bash
+$ http://localhost:3000
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### Postamn API Requests Path:
 
-## Stay in touch
+Where you can fins all postman requests **Create, GetByID, GetAll, Update and Delete** for **Sites, Trucks and Tickets**
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+```bash
+$ src/postman
+```
 
-## License
+Import the both **postman_api_env.json and postman_api_requests.json** files to postman and start testing the server.
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+### Example Endpoints
+
+#### 1. Create Tickets in Bulk
+
+- Method: POST
+- Endpoint: /tickets/bulk-create
+- Example:
+
+```json
+{
+  "tickets": [
+    {
+      "truckId": 1,
+      "siteId": 1,
+      "dispatchedTime": "2024-09-16T10:00:00.000Z"
+    },
+    {
+      "truckId": 2,
+      "siteId": 1,
+      "dispatchedTime": "2024-09-16T10:05:00.000Z"
+    }
+  ]
+}
+```
+
+#### 2. Filter Tickets
+
+- Method: GET
+- Endpoint: /tickets/filter
+- Query Parameters:
+- siteId (optional): Filter by site.
+- startDate and endDate (optional): Filter by date range.
+- Example:
+
+```bash
+GET /tickets/filter?siteId=1&startDate=2024-09-16T00:00:00.000Z&endDate=2024-09-17T00:00:00.000Z
+```
