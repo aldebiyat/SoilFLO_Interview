@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Site } from '../site/site.entity';
 import { Truck } from '../truck/truck.entity';
+import { toUTCString } from '../utils/date-utils';
 import { BulkCreateTicketDto } from './dto/bulk-create-ticket.dto';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { FilterTicketDto } from './dto/filter-ticket.dto';
@@ -35,9 +36,10 @@ export class TicketService {
     bulkCreateTicketDto: BulkCreateTicketDto,
   ): Promise<Ticket[]> {
     const ticketsToSave: Ticket[] = [];
-
-    // Extract the tickets array from the BulkCreateTicketDto
     const { tickets } = bulkCreateTicketDto;
+
+    // It helps keep track of the dispatchedTime values that have already been processed for each truckId within the same batch of tickets
+    const dispatchedTimeTracker: { [key: string]: Set<string> } = {};
 
     // Group tickets by site to optimize ticket number assignment
     const ticketsBySite = tickets.reduce((acc, dto) => {
@@ -48,7 +50,6 @@ export class TicketService {
       return acc;
     }, {});
 
-    // Iterate over each site and create tickets with incrementing ticket numbers
     for (const siteId in ticketsBySite) {
       const siteTickets = ticketsBySite[siteId];
 
@@ -60,23 +61,28 @@ export class TicketService {
 
       let nextTicketNumber = lastTicket ? lastTicket.ticketNumber + 1 : 1;
 
-      // Create tickets for this site and assign ticket numbers
       for (const dto of siteTickets) {
-        // Check if the dispatched time is in the future
         const now = new Date();
-        if (new Date(dto.dispatchedTime) > now) {
+        const dispatchedTime = new Date(dto.dispatchedTime);
+
+        // Check if the dispatched time is in the future
+        if (dispatchedTime > now) {
           throw new Error(
             `Ticket cannot have a dispatched time in the future for truck ID: ${dto.truckId}`,
           );
         }
 
-        // Check if a ticket with the same dispatchedTime already exists for the truck
-        const existingTicket = await this.ticketRepository.findOne({
-          where: {
-            truck: { id: dto.truckId },
-            dispatchedTime: dto.dispatchedTime,
-          },
-        });
+        // Convert dispatchedTime to UTC using the custom utility function
+        const dispatchedTimeUTC = toUTCString(dto.dispatchedTime);
+
+        // Check if a ticket with the same dispatchedTime already exists for the truck in the database
+        const existingTicket = await this.ticketRepository
+          .createQueryBuilder('ticket')
+          .where('ticket.truckId = :truckId', { truckId: dto.truckId })
+          .andWhere(`ticket."dispatchedTime" = :dispatchedTime`, {
+            dispatchedTime: dispatchedTimeUTC,
+          })
+          .getOne();
 
         if (existingTicket) {
           throw new Error(
@@ -84,7 +90,22 @@ export class TicketService {
           );
         }
 
-        // Create the ticket
+        // Check for duplicate dispatchedTime within the same batch
+        if (!dispatchedTimeTracker[dto.truckId]) {
+          dispatchedTimeTracker[dto.truckId] = new Set();
+        }
+
+        if (
+          dispatchedTimeTracker[dto.truckId].has(dispatchedTime.toISOString())
+        ) {
+          throw new Error(
+            `Duplicate ticket with dispatched time ${dto.dispatchedTime} found in the batch for truck ID: ${dto.truckId}`,
+          );
+        }
+
+        // Add the dispatchedTime to the tracker
+        dispatchedTimeTracker[dto.truckId].add(dispatchedTime.toISOString());
+
         const ticket = this.ticketRepository.create({
           truck: { id: dto.truckId },
           site: { id: dto.siteId },
